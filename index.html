@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aplikasi Toko • OOP (Properties & Methods)</title>
+  <style>
+    :root{
+      --bg:#0f172a; /* slate-900 */
+      --panel:#111827; /* gray-900 */
+      --muted:#94a3b8; /* slate-400 */
+      --text:#e5e7eb; /* gray-200 */
+      --brand:#22c55e; /* green-500 */
+      --brand-2:#10b981; /* emerald-500 */
+      --danger:#ef4444; /* red-500 */
+      --warn:#f59e0b; /* amber-500 */
+      --card:#0b1220;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{ box-sizing: border-box }
+    body{
+      margin:0; background:radial-gradient(1200px 600px at 80% -10%, #1f2937 0%, rgba(31,41,55,0) 60%),
+                 radial-gradient(1200px 700px at -10% 120%, #0b3b2e 0%, rgba(0,0,0,0) 55%),
+                 var(--bg);
+      color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      min-height:100svh;
+      display:grid; grid-template-rows:auto auto 1fr auto; gap:16px;
+    }
+    header{ display:flex; gap:16px; align-items:center; justify-content:space-between; padding:20px clamp(16px, 3vw, 36px); }
+    .brand{ display:flex; align-items:center; gap:14px; font-weight:800; letter-spacing:.3px; }
+    .logo{ width:42px; height:42px; border-radius:50%; background:conic-gradient(from 220deg, var(--brand), var(--brand-2)); box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+    .brand small{ color:var(--muted); font-weight:600; opacity:.85; }
+
+    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; }
+    .search, select, button, .pill{ border:none; outline:none; background:rgba(255,255,255,.06); color:var(--text); padding:12px 14px; border-radius:14px; }
+    .search{ min-width:240px }
+    .btn{ cursor:pointer; transition:.2s transform ease, .25s opacity ease; }
+    .btn:active{ transform: translateY(1px) }
+    .btn-brand{ background:linear-gradient(120deg, var(--brand), var(--brand-2)); color:#052e1b; font-weight:800; }
+
+    main{ display:grid; grid-template-columns: 1.2fr .8fr; gap:20px; padding: 0 clamp(16px, 3vw, 36px) 36px; }
+    @media (max-width: 980px){ main{ grid-template-columns:1fr; } }
+
+    .panel{ background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(8px);
+            border-radius:var(--radius); box-shadow: var(--shadow); }
+
+    .products{ padding:16px; }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:14px; }
+    .card{ background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+    .thumb{ aspect-ratio: 4/3; background:linear-gradient(140deg, rgba(34,197,94,.2), rgba(16,185,129,.18)); position:relative; display:grid; place-items:center; font-size:54px; }
+    .stock{ position:absolute; top:10px; left:10px; padding:6px 10px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.1); border-radius:12px; font-size:12px; }
+    .card-body{ padding:12px; display:grid; gap:8px; }
+    .title{ font-weight:700; line-height:1.2; }
+    .muted{ color:var(--muted); font-size:14px; }
+    .price{ font-weight:800; font-size:18px; }
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .pill{ font-size:12px; opacity:.9 }
+    .add{ width:100%; padding:10px 12px; font-weight:700; background:rgba(34,197,94,.18); border:1px solid rgba(34,197,94,.35); color:#86efac; border-radius:12px; cursor:pointer; }
+    .add:disabled{ opacity:.5; cursor:not-allowed }
+
+    /* Cart */
+    .cart{ padding:16px; display:grid; grid-template-rows:auto 1fr auto; gap:12px; min-height:420px; }
+    .cart-header{ display:flex; align-items:center; justify-content:space-between; }
+    .cart-list{ display:grid; gap:10px; overflow:auto; max-height:52vh; padding-right:6px; }
+    .cart-item{ display:grid; grid-template-columns: 60px 1fr auto; gap:10px; align-items:center; padding:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:12px; }
+    .cart-item .thumb{ aspect-ratio:1; font-size:28px; }
+    .qty{ display:flex; align-items:center; gap:8px; }
+    .icon-btn{ width:30px; height:30px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); cursor:pointer; font-weight:800; }
+    .remove{ background:rgba(239,68,68,.15); border-color: rgba(239,68,68,.45); color:#fecaca; }
+
+    .totals{ display:grid; gap:8px; padding-top:6px; border-top:1px dashed rgba(255,255,255,.15); }
+    .totals .row{ font-weight:700; }
+    .checkout{ margin-top:8px; }
+
+    footer{ padding:16px clamp(16px, 3vw, 36px); color:var(--muted); font-size:14px; text-align:center; }
+    code.inline{ background:rgba(255,255,255,.08); padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.12); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <div style="font-size:1.15rem">GreenMart</div>
+        <small>Vanilla Web • OOP Demo</small>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input id="search" class="search" type="search" placeholder="Cari produk… (cth: susu)" />
+      <select id="category">
+        <option value="all">Semua Kategori</option>
+      </select>
+      <button id="clearCart" class="btn">Bersihkan Keranjang</button>
+      <button id="showState" class="btn btn-brand">Lihat State (Objek)</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel products">
+      <div class="grid" id="productGrid"></div>
+    </section>
+
+    <aside class="panel cart">
+      <div class="cart-header">
+        <h3>Keranjang</h3>
+        <span id="cartCount" class="pill">0 item</span>
+      </div>
+      <div id="cartList" class="cart-list"></div>
+
+      <div class="totals">
+        <div class="row"><span>Subtotal</span><span id="subtotal">Rp0</span></div>
+        <div class="row"><span>PPN (11%)</span><span id="tax">Rp0</span></div>
+        <div class="row" style="font-size:1.2rem"><span>Total</span><span id="total">Rp0</span></div>
+        <button id="checkout" class="btn btn-brand checkout">Checkout</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    Dibuat dengan <strong>HTML</strong>, <strong>CSS</strong>, dan <strong>JavaScript</strong>. Fokus materi: <code class="inline">Object (properties & methods)</code>.
+  </footer>
+
+<script>
+/********************
+ * UTIL: Formatter
+ ********************/
+const IDR = new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 });
+
+/********************
+ * CLASS Product (contoh OOP: properties + methods)
+ ********************/
+class Product {
+  // PROPERTIES
+  constructor({ id, name, price, img, stock, category, emoji }){
+    this.id = id;
+    this.name = name;
+    this.price = price; // number (rupiah)
+    this.img = img; // (opsional) url gambar
+    this.stock = stock; // number: sisa stok
+    this.category = category; // string
+    this.emoji = emoji || '🛒';
+  }
+  // METHODS
+  formatPrice(){ return IDR.format(this.price); }
+  inStock(){ return this.stock > 0; }
+  reduceStock(qty=1){ if(this.stock >= qty){ this.stock -= qty; return true;} return false; }
+  increaseStock(qty=1){ this.stock += qty; }
+}
+
+/********************
+ * OBJECT Store (namespace manajemen produk)
+ ********************/
+const Store = {
+  // PROPERTIES
+  products: [],
+  filtered: [],
+  categories: new Set(['all']),
+
+  // METHODS
+  loadProducts(){
+    // Data seed: bisa diganti/ditambah sesuai kebutuhan
+    const data = [
+      {id:'P01', name:'Susu Almond 1L', price:42000, stock:12, category:'Minuman', emoji:'🥛'},
+      {id:'P02', name:'Roti Gandum', price:18000, stock:8, category:'Makanan', emoji:'🍞'},
+      {id:'P03', name:'Kopi Arabika 200g', price:56000, stock:10, category:'Minuman', emoji:'☕'},
+      {id:'P04', name:'Madu Hutan 250ml', price:69000, stock:5, category:'Kesehatan', emoji:'🍯'},
+      {id:'P05', name:'Apel Fuji (1kg)', price:38000, stock:15, category:'Buah', emoji:'🍎'},
+      {id:'P06', name:'Telur Omega 10pcs', price:32000, stock:20, category:'Makanan', emoji:'🥚'},
+      {id:'P07', name:'Minyak Zaitun 500ml', price:75000, stock:7, category:'Bumbu', emoji:'🫒'},
+      {id:'P08', name:'Granola 300g', price:53000, stock:9, category:'Makanan', emoji:'🥣'},
+      {id:'P09', name:'Jus Jeruk 1L', price:27000, stock:0, category:'Minuman', emoji:'🧃'},
+      {id:'P10', name:'Pasta Fusilli 500g', price:29000, stock:11, category:'Makanan', emoji:'🍝'}
+    ].map(p => new Product(p));
+
+    this.products = data;
+    this.filtered = data;
+    data.forEach(p => this.categories.add(p.category));
+  },
+  filter(term='', category='all'){
+    const t = term.toLowerCase();
+    this.filtered = this.products.filter(p => {
+      const matchText = p.name.toLowerCase().includes(t);
+      const matchCat = category === 'all' || p.category === category;
+      return matchText && matchCat;
+    });
+    UI.renderProducts();
+  },
+  getById(id){ return this.products.find(p => p.id === id); }
+};
+
+/********************
+ * OBJECT Cart (contoh OOP: properties + methods)
+ ********************/
+const Cart = {
+  // PROPERTIES
+  items: /** @type {Record<string, number>} */ ({}), // { productId: qty }
+  taxRate: 0.11,
+
+  // METHODS
+  load(){
+    const raw = localStorage.getItem('cart');
+    this.items = raw ? JSON.parse(raw) : {};
+    UI.updateCartUI();
+  },
+  save(){ localStorage.setItem('cart', JSON.stringify(this.items)); },
+
+  add(productId, qty=1){
+    const p = Store.getById(productId);
+    if(!p || !p.inStock()) return;
+    // Kurangi stok produk saat menambahkan ke keranjang
+    if(p.reduceStock(qty)){
+      this.items[productId] = (this.items[productId] || 0) + qty;
+      this.save();
+      UI.updateProductCard(productId);
+      UI.updateCartUI();
+    }
+  },
+  remove(productId){
+    const p = Store.getById(productId);
+    const qty = this.items[productId] || 0;
+    if(qty>0){
+      p.increaseStock(qty); // kembalikan stok ke produk
+      delete this.items[productId];
+      this.save();
+      UI.updateProductCard(productId);
+      UI.updateCartUI();
+    }
+  },
+  setQty(productId, qty){
+    const p = Store.getById(productId);
+    const curr = this.items[productId] || 0;
+    qty = Math.max(0, Math.min(qty, curr + p.stock));
+    if(qty === curr) return;
+
+    if(qty > curr){
+      const diff = qty - curr;
+      if(p.reduceStock(diff)){
+        this.items[productId] = qty;
+      }
+    } else {
+      const diff = curr - qty;
+      p.increaseStock(diff);
+      if(qty === 0) delete this.items[productId]; else this.items[productId] = qty;
+    }
+    this.save();
+    UI.updateProductCard(productId);
+    UI.updateCartUI();
+  },
+  clear(){
+    // Kembalikan semua stok
+    Object.entries(this.items).forEach(([id, qty]) => {
+      const p = Store.getById(id); p && p.increaseStock(qty);
+    });
+    this.items = {};
+    this.save();
+    UI.renderProducts();
+    UI.updateCartUI();
+  },
+  getCount(){ return Object.values(this.items).reduce((a,b)=>a+b,0); },
+  getSubtotal(){
+    return Object.entries(this.items).reduce((sum,[id, qty]) => {
+      const p = Store.getById(id); return sum + (p ? p.price * qty : 0);
+    }, 0);
+  },
+  getTax(){ return this.getSubtotal() * this.taxRate; },
+  getTotal(){ return this.getSubtotal() + this.getTax(); }
+};
+
+/********************
+ * OBJECT UI (semua render & event handler)
+ ********************/
+const UI = {
+  els: {},
+  mount(){
+    this.els.grid = document.getElementById('productGrid');
+    this.els.select = document.getElementById('category');
+    this.els.search = document.getElementById('search');
+    this.els.cartList = document.getElementById('cartList');
+    this.els.cartCount = document.getElementById('cartCount');
+    this.els.subtotal = document.getElementById('subtotal');
+    this.els.tax = document.getElementById('tax');
+    this.els.total = document.getElementById('total');
+
+    this.bindEvents();
+    this.renderCategoryOptions();
+    this.renderProducts();
+    Cart.load();
+  },
+  bindEvents(){
+    this.els.search.addEventListener('input', e => Store.filter(e.target.value, this.els.select.value));
+    this.els.select.addEventListener('change', e => Store.filter(this.els.search.value, e.target.value));
+
+    document.getElementById('clearCart').addEventListener('click', ()=> Cart.clear());
+    document.getElementById('checkout').addEventListener('click', ()=> this.checkout());
+    document.getElementById('showState').addEventListener('click', ()=> this.showState());
+  },
+  renderCategoryOptions(){
+    Store.categories.forEach(cat => {
+      if(cat==='all') return; // sudah ada default option
+      const opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat; this.els.select.appendChild(opt);
+    });
+  },
+  renderProducts(){
+    const grid = this.els.grid; grid.innerHTML = '';
+    Store.filtered.forEach(p => {
+      const card = document.createElement('article');
+      card.className = 'card'; card.id = `card-${p.id}`;
+      card.innerHTML = `
+        <div class="thumb">
+          <div class="stock">Stok: <strong id="stock-${p.id}">${p.stock}</strong></div>
+          <span>${p.emoji}</span>
+        </div>
+        <div class="card-body">
+          <div class="title">${p.name}</div>
+          <div class="row">
+            <span class="muted">${p.category}</span>
+            <span class="price" id="price-${p.id}">${p.formatPrice()}</span>
+          </div>
+          <button class="add" id="btn-${p.id}" ${!p.inStock() ? 'disabled' : ''}>${p.inStock() ? 'Tambah ke Keranjang' : 'Stok Habis'}</button>
+        </div>`;
+
+      grid.appendChild(card);
+      card.querySelector(`#btn-${p.id}`).addEventListener('click', () => Cart.add(p.id, 1));
+    });
+  },
+  updateProductCard(productId){
+    const p = Store.getById(productId); if(!p) return;
+    const stockEl = document.getElementById(`stock-${productId}`);
+    const btn = document.getElementById(`btn-${productId}`);
+    if(stockEl) stockEl.textContent = p.stock;
+    if(btn){
+      btn.disabled = !p.inStock();
+      btn.textContent = p.inStock() ? 'Tambah ke Keranjang' : 'Stok Habis';
+    }
+  },
+  updateCartUI(){
+    const list = this.els.cartList; list.innerHTML = '';
+    const entries = Object.entries(Cart.items);
+
+    if(entries.length === 0){
+      list.innerHTML = `<div class="muted">Keranjang kosong. Ayo belanja!</div>`;
+    } else {
+      entries.forEach(([id, qty]) => {
+        const p = Store.getById(id);
+        const item = document.createElement('div');
+        item.className = 'cart-item';
+        item.innerHTML = `
+          <div class="thumb">${p.emoji}</div>
+          <div>
+            <div class="title">${p.name}</div>
+            <div class="muted">${IDR.format(p.price)} × <span id="qty-${id}">${qty}</span></div>
+          </div>
+          <div class="qty">
+            <button class="icon-btn" aria-label="kurangi" id="dec-${id}">−</button>
+            <button class="icon-btn" aria-label="tambah" id="inc-${id}">+</button>
+            <button class="icon-btn remove" aria-label="hapus" id="del-${id}">✕</button>
+          </div>`;
+        list.appendChild(item);
+
+        document.getElementById(`dec-${id}`).addEventListener('click', ()=> Cart.setQty(id, (Cart.items[id]||0)-1));
+        document.getElementById(`inc-${id}`).addEventListener('click', ()=> Cart.setQty(id, (Cart.items[id]||0)+1));
+        document.getElementById(`del-${id}`).addEventListener('click', ()=> Cart.remove(id));
+      });
+    }
+
+    // Update badges & totals
+    this.els.cartCount.textContent = `${Cart.getCount()} item`;
+    this.els.subtotal.textContent = IDR.format(Cart.getSubtotal());
+    this.els.tax.textContent = IDR.format(Cart.getTax());
+    this.els.total.textContent = IDR.format(Cart.getTotal());
+  },
+  checkout(){
+    if(Object.keys(Cart.items).length === 0){
+      alert('Keranjang masih kosong.');
+      return;
+    }
+    const total = IDR.format(Cart.getTotal());
+    alert(`Transaksi berhasil!\nTotal bayar: ${total}`);
+    Cart.clear();
+  },
+  showState(){
+    const state = {
+      Store: {
+        products: Store.products.map(p => ({ id:p.id, name:p.name, stock:p.stock })),
+        categories: [...Store.categories]
+      },
+      Cart: { ...Cart, items: { ...Cart.items }, subtotal: Cart.getSubtotal(), total: Cart.getTotal() }
+    };
+    // Hindari menampilkan function saat stringify
+    const replacer = (key, value) => typeof value === 'function' ? undefined : value;
+    const pretty = JSON.stringify(state, replacer, 2);
+    const w = window.open('', '_blank', 'width=520,height=620');
+    w.document.write(`<pre style="margin:0;padding:16px;background:#0b1220;color:#e5e7eb;white-space:pre-wrap;">${pretty}</pre>`);
+    w.document.title = 'App State (Objects)';
+  }
+};
+
+/********************
+ * BOOTSTRAP
+ ********************/
+Store.loadProducts();
+UI.mount();
+</script>
+</body>
+</html>
